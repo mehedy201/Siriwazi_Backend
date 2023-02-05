@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const nodemailer = require('nodemailer');
 require('dotenv').config()
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,7 +30,38 @@ async function run() {
         app.post('/personData', async(req, res) =>{
             const personData = req.body;
             const result = await dataAboutPersonCollection.insertOne(personData)
-            console.log('Add new person Data', result);
+            if(personData.identityName === 'Email'){
+              try{
+                const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                        user: process.env.Email,
+                        pass: process.env.Pass
+                    }
+                });
+                
+                const mailOptions = {
+                    from : personData.identityNo ,
+                    to: process.env.Email,
+                    subject: `Email Form Database Management`,
+                    html: `
+                        <h2>You Got a new message From Database Management</h2>
+                        <h3>Some one Post about you please Check our Website</h3>
+                    `
+                }
+                transporter.sendMail(mailOptions, (error,info) => {
+                    if(error){
+                        console.log("Error", error)
+                    }else{
+                        console.log("Email Sent" + info.response);
+                        // console.log(mailOptions)
+                    }
+                })
+            }
+            finally{
+        
+            }
+            }
             res.send({success: true, result});
         })
         // Get Organization Data From Client Site _________________________________
